@@ -1,11 +1,14 @@
 import roomData from "../../db.js"
 
-const createRoom_on = (socket,io) => {
+const createRoom_on = (socket,io) => {  
+
+    console.log("CREATE ROOM LISTER IS ACTIVE")
 
     socket.on('create room', ( { hostName , sizeOfBoard } , callback ) => {
 
+        console.log("ROOM CREATED")
         // const roomid = generateRoomId();
-        const roomid = 1234;
+        const roomid = "1234";
         // create room data
         const room = {
             roomid: roomid ,
@@ -17,7 +20,6 @@ const createRoom_on = (socket,io) => {
             gameStatus: 'lobby'
         }
 
-        console.log(room)
 
         // add the host room
         const newPlayer = { id : socket.id , name : hostName }
@@ -28,7 +30,7 @@ const createRoom_on = (socket,io) => {
         roomData.set(roomid,room);  
 
         // return success msg
-        callback({msg:'success'});
+        return callback({status:true ,msg:'success'});
 
     })
 

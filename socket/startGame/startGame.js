@@ -8,48 +8,63 @@ const startGame = ( socket , io ) => {
 
     socket.on('init game' , ( { roomid } , callback )=>{
 
-        const room = roomData.get(roomid);
-        const boardSize = room.sizeOfBoard;
-
+        
+        const room = roomData.get(String(roomid));
 
         // check the presence of board
-        if(!room) callback({ status:false , message:'Room no longer exisit' });
-
+        if(!room) return callback({ status:false , message:'Room no longer exisit' });
+        
         // check if the game is already started
-        if( room.gameStatus != 'lobby' ) callback( { status : false , msg:'Game Already started' } )
-
+        if( room.gameStatus != 'lobby' ) return callback( { status : false , msg:'Game Already started' } )
+            
+        const boardSize = room.sizeOfBoard;
+        
         //create and insert gameState
-        room.set(boardState,[]);
-        room.set(numberCrossedStatus,[]);   // note the number Crossed Status of player for the current round
-        room.set(allCrossedNumber,[]);      // track all the crossed num in order durring the whole game
-        room.set(currRound,1);          // note the currround 
-        room.set(numCrossedInCurrRound,0);     // track the curr no crossed in this round
-        room.gameStatus = 'game started' // change status to 'game started'
-        room.set(currTurn,1);
+        const boardState = [];
+        const numberCrossedStatus = [];
+        const allCrossedNumber = [];
+        const numCrossedInCurrRound = 0;
+        const currPlayerTurn = room.players[0];
+        const winner = [];
+
+        room.boardState = boardState;
+        room.numberCrossedStatus = numberCrossedStatus;
+        room.allCrossedNumber = allCrossedNumber;
+        room.currRound =  {player : 1 , name : room.players[0].name , choosen_number : -1};
+        room.numCrossedInCurrRound = numCrossedInCurrRound;
+        room.gameStatus = "game started" ;
+        room.currPlayerTurn = currPlayerTurn ;
+        room.winner = winner ;
+
+        // room.set(boardState,[]);
+        // room.set(numberCrossedStatus,[]);   // note the number Crossed Status of player for the current round
+        // room.set(allCrossedNumber,[]);      // track all the crossed num in order durring the whole game
+        // room.set(currRound,1);              // note the currround 
+        // room.set(numCrossedInCurrRound,0);  // track the curr no crossed in this round
+        // room.gameStatus = 'game started'    // change status to 'game started'
+        // room.set(currPlayerTurn ,room.players[0]);       // curr player turn
+        // room.set(choosen_number,-1)         // this is the first choosen number before player 1
+        // room.set(winner,[]);                // store the first three winner
         
         //send random game state to each user ;
-        for( i = 0 ; i < room.users.length ; i++ ){
+        for( let i = 0 ; i < room.players.length ; i++ ){
             
             const board = generateBoardState(boardSize) 
-            const playerBoardState = { id : players[i].id , board:board }
-            io.to(players[i].id).emit('game state' , playerBoardState );
+            const playerBoardState = { id : room.players[i].id , board:board }
+            io.to(room.players[i].id).emit('game state' , playerBoardState );
             room.boardState.push(playerBoardState)
-            room.numberCrossedStatus.push({id : players[i].id  , isCrossed : false })
+            room.numberCrossedStatus.push({id : room.players[i].id  , isCrossed : false })
 
         }
 
-        
-        setTimeout(() => {
-            io.to(roomid).emit('player turn' , { id : room.players[0].id } );
-        }, 1000);
-
-        
-
-
-
-
+        console.log(io.sockets.adapter.rooms); // Check active rooms
+        console.log(room.currRound)
+        io.to(String(roomid)).emit('test', {data:"125"} )
+        io.to(String(roomid)).emit( 'player turn' , { player_turn : room.currRound}  );
+        console.log("GAME STARTED!");
 
     })
+
 }
 
 export default startGame ; 

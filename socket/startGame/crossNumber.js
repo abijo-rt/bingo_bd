@@ -3,18 +3,23 @@ import roomData from "../../db";
 
 const crossNumber = (socket,id) => {
 
-    socket.on( 'cross number' , ( {roomid} , callback ) => {
+    socket.on( 'cross number' , ( {roomid,num} , callback ) => {
         const room = roomData.get(roomid) ;
 
         if(!room) callback( { status : false , msg : 'game is over already' } )
         
         room.numCrossedInCurrRound += 1;
 
+        if(room.currPlayerTurn.id == socket.id ){
+            socket.emit('choose number',{num})
+        }
+
+
         // check if all players have crossed the number
         if( room.numCrossedInCurrRound != room.players.length ) {
 
             // mark the crossed player as true
-            numberCrossedStatus.forEach(player => {
+            room.numberCrossedStatus.forEach(player => {
                 if(player.id == socket.id) {
                     player.isCrossed = true
                     // update player borad by emit || yet to be created
@@ -22,6 +27,7 @@ const crossNumber = (socket,id) => {
                 }
             });
             
+            socket.emit('players crossed',room.numberCrossedStatus);
         }
         
         
@@ -32,7 +38,6 @@ const crossNumber = (socket,id) => {
         });
 
         // update player borad by emit || yet to be created || this must be a brodcast !!
-
         
         if(room.currTurn == room.players.length) currTurn = 0;
         room.currTurn += 1;

@@ -2,30 +2,42 @@ import roomData from '../../db.js'
 
 
 const joinRoom_on = (socket,io) => {
+
+    console.log("JOIN ROOM LISTER IS ACTIVE")
+
     socket.on('join room',( { playerName , roomid } , callback )=>{
 
         const room = roomData.get(roomid)
         
-        // check for the existence of the room
-        if(!room) callback({ status : false, msg : 'Room Not Found'})
+        // console.log(room)
+        // console.log("player name "  + playerName)
+        // console.log(roomid)
+        // console.log(roomData)
+        
+        // check for the existence of the room 
+        if(!room) return callback({ status : false, msg : 'Room Not Found'})
+        
+        // check for room status id full return false callback
 
         // to check whether room has reach the playerLimit
-        if(room.players.length >= room.playerLimit) callback({ status : false, msg : 'Room is full'})
+        if(room.players.length >= room.playerLimit) return callback({ status : false, msg : 'Room is full'})
 
         // create a new player object
         const playerData = { id : socket.id , name : playerName }
 
         // add play to db 
-        room.players.push(player)
+        room.players.push(playerData)
 
         //add user to the room
         socket.join(roomid)
 
-        // notify aother players in the room
-        io.to(roomid).emit('player joined' , room );
+        console.log(room.players);
 
-        // notify the player 
-        callback({ status : true , msg : 'Player Joined Room' , room : room })
+        // notify aother players in the room
+        io.to(roomid).emit('player joined' , { player : room.players} );
+
+        // notify the player
+        return  callback({ status : true , msg : 'Player Joined Room' , room : room })
 
     })
 }
