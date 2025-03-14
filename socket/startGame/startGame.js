@@ -30,11 +30,13 @@ const startGame = ( socket , io ) => {
         room.boardState = boardState;
         room.numberCrossedStatus = numberCrossedStatus;
         room.allCrossedNumber = allCrossedNumber;
-        room.currRound =  {player : 1 , name : room.players[0].name , choosen_number : -1};
+        room.currRound =  {id : room.players[0].id , name : room.players[0].name , choosen_number : -1};
         room.numCrossedInCurrRound = numCrossedInCurrRound;
         room.gameStatus = "game started" ;
-        room.currPlayerTurn = currPlayerTurn ;
+        room.currTurn = 0 ;
         room.winner = winner ;
+        room.roundNumber = 1 ;
+        // room.currPlayerTurn
 
         // room.set(boardState,[]);
         // room.set(numberCrossedStatus,[]);   // note the number Crossed Status of player for the current round
@@ -45,7 +47,8 @@ const startGame = ( socket , io ) => {
         // room.set(currPlayerTurn ,room.players[0]);       // curr player turn
         // room.set(choosen_number,-1)         // this is the first choosen number before player 1
         // room.set(winner,[]);                // store the first three winner
-        
+    
+
         //send random game state to each user ;
         for( let i = 0 ; i < room.players.length ; i++ ){
             
@@ -59,7 +62,7 @@ const startGame = ( socket , io ) => {
 
         console.log(io.sockets.adapter.rooms); // Check active rooms
         console.log(room.currRound)
-        io.to(String(roomid)).emit('test', {data:"125"} )
+        io.to(String(roomid)).emit('listen to game status', "game started"  )
         io.to(String(roomid)).emit( 'player turn' , { player_turn : room.currRound}  );
         console.log("GAME STARTED!");
 
