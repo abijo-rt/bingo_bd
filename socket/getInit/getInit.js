@@ -7,7 +7,7 @@ const get_init_player_board = (socket , io) => {
         const room = roomData.get(roomid);
         if(!room) return callback({status:false,msg:"room not found"})
         callback({status:true,player:room.players})
-
+    
     })
 }
 

@@ -7,9 +7,10 @@ const gameOver = (socket,io) => {
         const room = roomData;
 
         if(!room) callback({status:false,msg:'somting wentWrong'})
-            
 
         room.winner.push(socket.id);   
+
+        
         // check if 3 player have finished there match
         if( room.winner.length == 3 ) io.to(roomid).emit('result',{winner : room.winner}) // recheck what is return here
 

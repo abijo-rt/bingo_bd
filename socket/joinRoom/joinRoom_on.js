@@ -9,10 +9,6 @@ const joinRoom_on = (socket,io) => {
 
         const room = roomData.get(roomid)
         
-        // console.log(room)
-        // console.log("player name "  + playerName)
-        // console.log(roomid)
-        // console.log(roomData)
         
         // check for the existence of the room 
         if(!room) return callback({ status : false, msg : 'Room Not Found'})

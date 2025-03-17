@@ -8,7 +8,7 @@ const startGame = ( socket , io ) => {
 
     socket.on('init game' , ( { roomid } , callback )=>{
 
-        
+        console.log(roomid)
         const room = roomData.get(String(roomid));
 
         // check the presence of board
@@ -47,7 +47,7 @@ const startGame = ( socket , io ) => {
         // room.set(currPlayerTurn ,room.players[0]);       // curr player turn
         // room.set(choosen_number,-1)         // this is the first choosen number before player 1
         // room.set(winner,[]);                // store the first three winner
-    
+        
 
         //send random game state to each user ;
         for( let i = 0 ; i < room.players.length ; i++ ){

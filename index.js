@@ -18,11 +18,6 @@ const io = new Server(server,{
 
 socketHandler(io);
 
-
-
-
-
-
-server.listen(PORT,()=>{
+server.listen(PORT,'0.0.0.0',()=>{
     console.log('server is running on port 3000')
 })

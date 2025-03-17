@@ -1,4 +1,5 @@
 import roomData from "../../db.js"
+import generateRoomId from "../../utils/generateRoomId.js"
 
 const createRoom_on = (socket,io) => {  
 
@@ -6,9 +7,10 @@ const createRoom_on = (socket,io) => {
 
     socket.on('create room', ( { hostName , sizeOfBoard } , callback ) => {
 
-        console.log("ROOM CREATED")
-        // const roomid = generateRoomId();
-        const roomid = "1234";
+        const roomid = generateRoomId();
+        // const roomid = "1234";
+        console.log(roomid)
+        
         // create room data
         const room = {
             roomid: roomid ,
@@ -30,7 +32,7 @@ const createRoom_on = (socket,io) => {
         roomData.set(roomid,room);  
 
         // return success msg
-        return callback({status:true ,msg:'success'});
+        return callback({status:true ,msg:roomid});
 
     })
 

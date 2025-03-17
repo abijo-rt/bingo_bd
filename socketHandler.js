@@ -18,7 +18,7 @@ const socketHandler = (io) => {
         startGame(socket,io)
         get_init_game_status(socket,io);
         crossNumber(socket,io)
-
+        
     })
 }
 
