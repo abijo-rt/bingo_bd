@@ -16,7 +16,6 @@ const get_init_game_status = (socket , io) => {
     socket.on('get init game status',( {roomid} , callback )=>{
         const room = roomData.get(roomid);
         if(!room) return callback({status:false , gameStatus:"room not found"})
-        console.log(room)
         return callback({status:true , gameStatus:room.gameStatus})
     })
 

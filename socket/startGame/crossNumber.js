@@ -27,6 +27,7 @@ const crossNumber = (socket,io) => {
         
         room.numCrossedInCurrRound = 0;
         room.roundNumber += 1;
+
         room.numberCrossedStatus.forEach(player => {
             player.isCrossed = false
         });
@@ -37,6 +38,11 @@ const crossNumber = (socket,io) => {
         room.currTurn += 1;
         if(room.currTurn == room.players.length) room.currTurn = 0;
         console.log(room.currTurn)
+
+        // for(let i=0 ; i< room.players.length ; i++){
+        //     if(room.winner.includes)
+        // }
+
         room.currRound =  {id : room.players[room.currTurn].id , name : room.players[room.currTurn].name , choosen_number : -1};
         
         io.to(String(roomid)).emit('player turn' , { player_turn : room.currRound } ); // this need decision to make

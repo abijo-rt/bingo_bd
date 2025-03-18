@@ -1,21 +1,31 @@
 import roomData from '../../db.js'
 import generateBoardState from '../../utils/generateBoardState.js';
-
+import Room from '../../Model/Room.js'
 
 
 
 const startGame = ( socket , io ) => {
 
-    socket.on('init game' , ( { roomid } , callback )=>{
+    socket.on('init game' ,async ( { roomid } , callback )=>{
 
         console.log(roomid)
         const room = roomData.get(String(roomid));
 
+        const temp = await Room.findOne({room_id : roomid})
+
+        console.log(temp)
+        
+        if(!temp) return callback({status:false , msg : 'Game alreay started'})
+        if( temp.game_status != 'lobby' ) return callback( { status : false , msg:'Game Already started' } )
+
+
+      
+            
         // check the presence of board
-        if(!room) return callback({ status:false , message:'Room no longer exisit' });
+        // if(!room) return callback({ status:false , message:'Room no longer exisit' });
         
         // check if the game is already started
-        if( room.gameStatus != 'lobby' ) return callback( { status : false , msg:'Game Already started' } )
+        // if( room.gameStatus != 'lobby' ) return callback( { status : false , msg:'Game Already started' } )
             
         const boardSize = room.sizeOfBoard;
         
@@ -36,6 +46,7 @@ const startGame = ( socket , io ) => {
         room.currTurn = 0 ;
         room.winner = winner ;
         room.roundNumber = 1 ;
+        
         // room.currPlayerTurn
 
         // room.set(boardState,[]);
@@ -50,20 +61,35 @@ const startGame = ( socket , io ) => {
         
 
         //send random game state to each user ;
+
+        let store = []
         for( let i = 0 ; i < room.players.length ; i++ ){
             
             const board = generateBoardState(boardSize) 
             const playerBoardState = { id : room.players[i].id , board:board }
             io.to(room.players[i].id).emit('game state' , playerBoardState );
             room.boardState.push(playerBoardState)
+            store.push(playerBoardState)
             room.numberCrossedStatus.push({id : room.players[i].id  , isCrossed : false })
 
         }
 
+        const roomTemp = await Room.findOneAndUpdate(
+            { room_id: roomid }, 
+            { 
+                $set: { 
+                    game_status: 'game started', 
+                    curr_turn: temp.players[0] ,
+                    boardState : store
+                } 
+            },
+            { new: true }
+        );
+
         console.log(io.sockets.adapter.rooms); // Check active rooms
         console.log(room.currRound)
         io.to(String(roomid)).emit('listen to game status', "game started"  )
-        io.to(String(roomid)).emit( 'player turn' , { player_turn : room.currRound}  );
+        io.to(String(roomid)).emit( 'player turn' , { player_turn : roomTemp.curr_turn}  );
         console.log("GAME STARTED!");
 
     })

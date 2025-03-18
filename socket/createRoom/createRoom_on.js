@@ -1,5 +1,6 @@
 import roomData from "../../db.js"
 import generateRoomId from "../../utils/generateRoomId.js"
+import Room from "../../Model/Room.js"
 
 const createRoom_on = (socket,io) => {  
 
@@ -8,9 +9,20 @@ const createRoom_on = (socket,io) => {
     socket.on('create room', ( { hostName , sizeOfBoard } , callback ) => {
 
         const roomid = generateRoomId();
-        // const roomid = "1234";
-        console.log(roomid)
         
+        const host = { id: socket.id , name: hostName }
+
+        const roomtemp = new Room({ 
+            room_id : roomid,
+            host_name : hostName ,
+            host_id : socket.id,
+            players : [host],
+            size_of_board : sizeOfBoard ,
+            player_limit : sizeOfBoard ,
+        });
+        
+        roomtemp.save();
+
         // create room data
         const room = {
             roomid: roomid ,
