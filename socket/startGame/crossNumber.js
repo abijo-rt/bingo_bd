@@ -1,76 +1,80 @@
 import roomData from "../../db.js";
+import Room from "../../Model/Room.js";
 
+const crossNumber = (socket, io) => {
+  socket.on("cross number", async ({ roomid, num }, callback) => {
 
-const crossNumber = (socket,io) => {
+    const room = roomData.get(String(roomid));
+    if (!room) return callback({ status: false, msg: "Game is over already" });
 
-    socket.on( 'cross number' , ( {roomid,num} , callback ) => {
-        
-        const room = roomData.get(String(roomid)) ;
-        if(!room) return callback( { status : false , msg : 'game is over already' } )
-        
-        room.numCrossedInCurrRound += 1;
-        console.log("player creossed")
-        // check if all players have crossed the number
-        if( room.numCrossedInCurrRound != room.players.length ) {
+    const roomtemp = await Room.findOne({ room_id: roomid });
+    if (!roomtemp) return callback({ status: false, msg: "Room not found in DB" });
 
-            // mark the crossed player as true
-            room.numberCrossedStatus.forEach(player => {
-               if(player.id == socket.id) {
-                    player.isCrossed = true
-                    // update player borad by emit || yet to be created
-                }
-            });
-            
-            io.to(String(roomid)).emit('players crossed',room.numberCrossedStatus);
-            return callback({status:true});
+    room.numCrossedInCurrRound += 1;
+    roomtemp.num_crossed_curr_round += 1;
+
+    console.log("Player crossed: " + roomtemp.num_crossed_curr_round);
+
+    if (room.numCrossedInCurrRound !== room.players.length) {
+      room.numberCrossedStatus.forEach((player) => {
+        if (player.id === socket.id) {
+          player.isCrossed = true;
         }
-        
-        room.numCrossedInCurrRound = 0;
-        room.roundNumber += 1;
+      });
+    }
 
-        room.numberCrossedStatus.forEach(player => {
-            player.isCrossed = false
-        });
-        
-        // update player borad by emit || yet to be created || this must be a brodcast !!
-        io.to(String(roomid)).emit('players crossed',room.numberCrossedStatus);
-        
-        room.currTurn += 1;
-        if(room.currTurn == room.players.length) room.currTurn = 0;
-        console.log(room.currTurn)
+    if (roomtemp.num_crossed_curr_round !== roomtemp.players.length) {
+      roomtemp.players.forEach((player) => {
+        if (player.id === socket.id) {
+          player.is_crossed = true;
+        }
+      });
+      await roomtemp.save();
+      io.to(String(roomid)).emit("players crossed", roomtemp.players);
+      return callback({ status: true });
+    }
 
-        // for(let i=0 ; i< room.players.length ; i++){
-        //     if(room.winner.includes)
-        // }
+    roomtemp.num_crossed_curr_round = 0;
+    room.numCrossedInCurrRound = 0;
+    room.roundNumber += 1;
 
-        room.currRound =  {id : room.players[room.currTurn].id , name : room.players[room.currTurn].name , choosen_number : -1};
-        
-        io.to(String(roomid)).emit('player turn' , { player_turn : room.currRound } ); // this need decision to make
-        
+    room.numberCrossedStatus.forEach((player) => (player.isCrossed = false));
+    roomtemp.players.forEach((player) => (player.is_crossed = false));
 
-    })
+    io.to(String(roomid)).emit("players crossed", roomtemp.players);
 
-    socket.on('set choosen number',({roomid,box_num} , callback )=>{
+    room.currTurn = (room.currTurn + 1) % room.players.length;
+    roomtemp.curr_player_idx = (roomtemp.curr_player_idx + 1) % roomtemp.players.length;
 
-        console.log("RECI CHHOSEN" + roomid + " " + box_num);
-        console.log(roomid);
+    roomtemp.curr_turn = roomtemp.players[roomtemp.curr_player_idx];
+    room.currRound = {
+      id: room.players[room.currTurn].id,
+      name: room.players[room.currTurn].name,
+      choosen_number: -1,
+    };
 
-        const room = roomData.get(String(roomid)) ;
-
-        if(!room) return callback( { status : false , msg : 'game is over already' } )
+    await roomtemp.save();
+    io.to(String(roomid)).emit("player turn", { player_turn: roomtemp.curr_turn });
     
-        room.allCrossedNumber.push(box_num);
-        io.to(String(roomid)).emit('number choosen',(box_num));
- 
-    })
+  });
 
-}
+  socket.on("set choosen number", async ({ roomid, box_num }, callback) => {
+    console.log("Received chosen number: " + roomid + " " + box_num);
 
-export default crossNumber ;
+    const roomtemp = await Room.findOneAndUpdate(
+      { room_id: roomid },
+      { $push: { all_crossed_number: box_num } },
+      { new: true }
+    );
 
-// room.set(boardState,[]);
-// room.set(numberCrossedStatus,[]);   // note the numberCrossedStatus of player
-// room.set(allCrossedNumber,[]);      // track all the crossed num in order
-// room.set(currRound,1);         // note the currround 
-// room.set(numCrossedInCurrRound,0);     // track the curr no crossed in this round
-// room.gameStatus = 'game started' // change status to 'game started'
+    if (!roomtemp) return callback({ status: false, msg: "Room not found in DB" });
+
+    const room = roomData.get(String(roomid));
+    if (!room) return callback({ status: false, msg: "Game is over already" });
+
+    room.allCrossedNumber.push(box_num);
+    io.to(String(roomid)).emit("number choosen", box_num);
+  });
+};
+
+export default crossNumber;

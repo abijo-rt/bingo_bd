@@ -60,6 +60,14 @@ const roomSchema  = new mongoose.Schema({
                 default : -1 
             }
         }
+    } , 
+    curr_player_idx : {
+        type : Number ,
+        default : 0
+    },
+    num_crossed_curr_round:{
+        type : Number ,
+        default : 0
     }
 
 })
